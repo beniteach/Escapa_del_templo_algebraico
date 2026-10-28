@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escapa del templo de algebraico</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Montserrat:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #0d0905;
+      color: #f3e5ab;
+    }
+    h1, h2, h3, .font-cinzel {
+      font-family: 'Cinzel', serif;
+    }
+    .font-arcade {
+      font-family: 'VT323', monospace;
+    }
+    .temple-border {
+      border: 4px solid #b8860b;
+      box-shadow: 0 0 15px rgba(184, 134, 11, 0.4);
+    }
+    .btn-mayan {
+      background: linear-gradient(180deg, #8b5a2b 0%, #4a2e12 100%);
+      border: 2px solid #d4af37;
+      transition: all 0.2s ease;
+    }
+    .btn-mayan:hover {
+      background: linear-gradient(180deg, #a06832 0%, #5c3917 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.5);
+    }
+    .option-btn {
+      background: rgba(30, 20, 10, 0.85);
+      border: 2px solid #8b5a2b;
+    }
+    .option-btn:hover {
+      border-color: #ffd700;
+      background: rgba(60, 40, 20, 0.9);
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-center bg-cover bg-fixed relative" style="background-image: radial-gradient(circle, rgba(13,9,5,0.75) 0%, rgba(5,3,1,0.95) 100%);">
+
+  <!-- Encabezado / Barra superior -->
+  <header class="w-full bg-black/80 border-b-2 border-amber-600/50 p-4 text-center shadow-lg backdrop-blur-sm z-10">
+    <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center px-4">
+      <h1 class="text-xl md:text-2xl font-bold text-amber-400 tracking-wider font-cinzel">
+        🗿 ESCAPA DEL TEMPLO ALGEBRAICO 🗿
+      </h1>
+      <div id="game-stats" class="hidden flex items-center space-x-6 text-sm md:text-base font-semibold">
+        <div class="bg-amber-950/80 px-3 py-1 rounded border border-amber-600/40">
+          <span class="text-amber-200">Aciertos:</span>
+          <span id="stat-corrects" class="text-emerald-400 font-bold">0 / 5</span>
+        </div>
+        <div class="bg-amber-950/80 px-3 py-1 rounded border border-amber-600/40">
+          <span class="text-amber-200">Salas Recorridas:</span>
+          <span id="stat-room" class="text-amber-400 font-bold">1</span>
+        </div>
+        <div class="bg-amber-950/80 px-3 py-1 rounded border border-amber-600/40">
+          <span class="text-amber-200">⏱️ Tiempo:</span>
+          <span id="stat-timer" class="text-amber-400 font-mono font-bold">00:00</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal -->
+  <main class="flex-grow flex items-center justify-center p-4 z-10">
+    <div id="app" class="w-full max-w-5xl">
+      
+      <!-- PANTALLA DE CONFIGURACIÓN E INICIO -->
+      <section id="screen-start" class="bg-stone-900/90 p-8 rounded-xl temple-border text-center space-y-6 backdrop-blur-md max-w-2xl mx-auto">
+        <h2 class="text-3xl font-extrabold text-amber-400 font-cinzel tracking-wide">
+          🏕️ Escapa del Templo Algebraico
+        </h2>
+        <p class="text-amber-100 text-base leading-relaxed">
+          Para escapar del templo debes acertar un total de <span class="text-amber-400 font-bold">n salas</span>. Cada fallo activará una sala de desvío adicional para compensar el error antes de encontrar la salida.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left bg-stone-950/60 p-6 rounded-lg border border-amber-800/40">
+          <div>
+            <label for="num-rooms" class="block text-sm font-semibold text-amber-300 mb-2">
+              🚪 Salas para escapar (n):
+            </label>
+            <input type="number" id="num-rooms" min="3" max="15" value="5"
+                   class="w-full bg-stone-800 text-amber-200 border border-amber-600/60 rounded px-3 py-2 text-lg font-bold">
+          </div>
+          <div>
+            <label for="difficulty" class="block text-sm font-semibold text-amber-300 mb-2">
+              🔥 Dificultad:
+            </label>
+            <select id="difficulty" class="w-full bg-stone-800 text-amber-200 border border-amber-600/60 rounded px-3 py-2 text-base font-semibold">
+              <option value="easy">Baja</option>
+              <option value="medium" selected>Media</option>
+              <option value="hard">Alta</option>
+            </select>
+          </div>
+        </div>
+
+        <button onclick="startGame()" class="btn-mayan text-amber-200 font-bold text-xl px-10 py-4 rounded-lg shadow-lg tracking-wider font-cinzel cursor-pointer">
+          🔥 Comenzar Expedición 🔥
+        </button>
+      </section>
+
+      <!-- PANTALLA DE JUEGO (SALAS) -->
+      <section id="screen-game" class="hidden space-y-6">
+        <div class="bg-stone-900/80 p-4 rounded-lg border border-amber-800/40 backdrop-blur-md">
+          <div class="text-xs uppercase tracking-widest text-amber-400 mb-2 font-bold font-cinzel text-center">
+            Navegación del Templo
+          </div>
+          <div id="room-nav" class="flex items-center justify-center space-x-2 overflow-x-auto py-2"></div>
+        </div>
+
+        <div class="bg-stone-900/95 p-8 rounded-xl temple-border text-center backdrop-blur-md relative">
+          <div class="text-amber-500 text-xs font-semibold uppercase tracking-widest mb-1">
+            Trampa en la Sala <span id="current-room-label">1</span>
+          </div>
+          <div id="room-timer" class="text-xs text-amber-300/80 mb-6 font-mono">
+            Tiempo en esta sala: <span id="room-time-counter">00:00</span>
+          </div>
+
+          <div id="operation-display" class="text-2xl md:text-3xl font-bold text-amber-200 my-8 py-6 px-4 bg-stone-950/80 rounded-lg border border-amber-600/30 font-mono tracking-wide"></div>
+
+          <div id="options-container" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6"></div>
+        </div>
+
+        <div class="flex justify-between items-center text-sm">
+          <button id="btn-prev" onclick="navigateRoom(-1)" class="bg-stone-800 hover:bg-stone-700 text-amber-300 font-semibold px-4 py-2 rounded border border-amber-700/50">
+            ⬅️ Sala Anterior
+          </button>
+          <button id="btn-next" onclick="navigateRoom(1)" class="bg-stone-800 hover:bg-stone-700 text-amber-300 font-semibold px-4 py-2 rounded border border-amber-700/50">
+            Sala Siguiente ➡️
+          </button>
+        </div>
+      </section>
+
+      <!-- PANTALLA ARCADE: INTRODUCIR NOMBRE (3 LETRAS) -->
+      <section id="screen-arcade" class="hidden bg-stone-900/95 p-8 rounded-xl temple-border text-center space-y-6 max-w-md mx-auto backdrop-blur-md">
+        <h2 class="text-2xl font-bold text-amber-400 font-cinzel">
+          🕹️ ¡SALÓN DE LA FAMA! 🕹️
+        </h2>
+        <p class="text-amber-200 text-sm">
+          Has escapado del templo. Introduce tus iniciales (exactamente 3 letras):
+        </p>
+
+        <div class="space-y-3">
+          <div class="flex justify-center gap-3">
+            <input type="text" id="arcade-input-1" maxlength="1" class="w-16 h-20 text-center text-4xl font-arcade uppercase bg-stone-950 border-2 border-amber-600 text-amber-300 rounded focus:border-amber-400 focus:outline-none" oninput="this.value = this.value.toUpperCase(); moveToNext(this, 'arcade-input-2')">
+            <input type="text" id="arcade-input-2" maxlength="1" class="w-16 h-20 text-center text-4xl font-arcade uppercase bg-stone-950 border-2 border-amber-600 text-amber-300 rounded focus:border-amber-400 focus:outline-none" oninput="this.value = this.value.toUpperCase(); moveToNext(this, 'arcade-input-3')">
+            <input type="text" id="arcade-input-3" maxlength="1" class="w-16 h-20 text-center text-4xl font-arcade uppercase bg-stone-950 border-2 border-amber-600 text-amber-300 rounded focus:border-amber-400 focus:outline-none" oninput="this.value = this.value.toUpperCase();">
+          </div>
+          <p id="arcade-error-msg" class="text-rose-400 text-sm font-semibold h-5"></p>
+        </div>
+
+        <button onclick="submitArcadeName()" class="btn-mayan text-amber-200 font-bold text-lg px-8 py-3 rounded-lg font-cinzel cursor-pointer w-full">
+          Registrar Récord ⚡
+        </button>
+      </section>
+
+      <!-- PANTALLA FINAL / RESUMEN -->
+      <section id="screen-summary" class="hidden space-y-6">
+        <div class="text-center space-y-2">
+          <h2 class="text-3xl font-black text-amber-400 font-cinzel">
+            🏆 Clasificación y Recorrido del Templo
+          </h2>
+          <p class="text-amber-200 text-sm">
+            Expedición completada por <span id="player-tag" class="text-amber-400 font-bold font-arcade text-lg"></span>
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Columna Izquierda: Recorrido -->
+          <div class="lg:col-span-5 bg-stone-900/95 p-6 rounded-xl temple-border space-y-4 max-h-[550px] overflow-y-auto">
+            <h3 class="text-xl font-bold text-amber-400 font-cinzel border-b border-amber-800/50 pb-2">
+              📜 Tu Recorrido
+            </h3>
+            <div class="grid grid-cols-2 gap-2 text-xs bg-stone-950/70 p-3 rounded border border-amber-800/40">
+              <div>Objetivo ($n$): <span id="sum-rooms" class="font-bold text-amber-200">5</span></div>
+              <div>Errores ($e$): <span id="sum-errors" class="font-bold text-red-400">0</span></div>
+              <div>Ratio Aciertos: <span id="sum-ratio" class="font-bold text-amber-200">5/5</span></div>
+              <div>Tiempo: <span id="sum-time" class="font-bold text-amber-400 font-mono">00:00</span></div>
+            </div>
+            <div id="summary-details" class="space-y-3"></div>
+          </div>
+
+          <!-- Columna Derecha: Ranking -->
+          <div class="lg:col-span-7 bg-stone-900/95 p-6 rounded-xl temple-border space-y-4 max-h-[550px] overflow-y-auto flex flex-col">
+            <h3 class="text-xl font-bold text-amber-400 font-cinzel border-b border-amber-800/50 pb-2 flex justify-between items-center">
+              <span>🏛️ Salón de la Fama (Top 20)</span>
+              <span id="player-rank-badge" class="text-xs bg-amber-800 text-amber-200 px-2 py-1 rounded">Puesto: #--</span>
+            </h3>
+            
+            <div class="overflow-x-auto flex-grow">
+              <table class="w-full text-left text-sm">
+                <thead class="bg-amber-950/80 text-amber-300 font-cinzel text-xs uppercase border-b border-amber-700">
+                  <tr>
+                    <th class="p-2 text-center">#</th>
+                    <th class="p-2">Explorador</th>
+                    <th class="p-2 text-center">Ratio Aciertos</th>
+                    <th class="p-2 text-right">Tiempo</th>
+                  </tr>
+                </thead>
+                <tbody id="ranking-table-body" class="divide-y divide-amber-900/30 font-arcade text-base">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center pt-2">
+          <button onclick="resetGame()" class="btn-mayan text-amber-200 font-bold text-lg px-8 py-3 rounded-lg font-cinzel cursor-pointer">
+            🔄 Nueva Expedición
+          </button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="w-full text-center py-3 bg-black/80 text-amber-600/70 text-xs border-t border-amber-900/30 z-10">
+    Escapa del Templo Algebraico • Matemáticas Secundaria • Beniteach v2.1
+  </footer>
+
+  <script>
+    // --- ESTADO Y VARIABLES DEL JUEGO ---
+    let targetCorrects = 5; // Número n de salas fijadas
+    let currentCorrects = 0; // Aciertos conseguidos hasta el momento
+    let difficulty = 'medium';
+    let currentRoomIndex = 0;
+    let maxReachedRoomIndex = 0;
+    let errorsCount = 0; // e errores cometiendo
+    
+    let totalTimeSeconds = 0;
+    let globalTimerInterval = null;
+    let roomTimerInterval = null;
+    let currentRoomSeconds = 0;
+
+    let roomsData = [];
+    let currentPlayerResult = null;
+
+    const bannedNames = new Set([
+      "ass", "poo", "gay", "sex", "dik", "dic", "dix", "suc", "suk", "sux", 
+      "fuc", "fuk", "fck", "die", "tit", "cum", "cam", "sxx", "xxx", 
+      "ano", "qlo", "cul", "peo", "nep", "pne", "kka", "kak", "kk ", 
+      "bsx", "pis", "tta", "bub", "eta", "pta", "cok", "cox", "kok", 
+      "kox", "but", "bum", "pee", "kgo", "pdf", "ped", "hui",
+      "put", "zor", "cag", "coa", "tont", "gil", "pene", "cuca", "coñ", "cño"
+    ]);
+
+    // --- GENERACIÓN DE OPERACIONES ---
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function formatTerm(coef, exp, isFirst = false) {
+      if (coef === 0) return '';
+      let sign = coef > 0 ? (isFirst ? '' : ' + ') : (isFirst ? '-' : ' - ');
+      let absCoef = Math.abs(coef);
+      let coefStr = (absCoef === 1 && exp > 0) ? '' : absCoef.toString();
+      
+      let varStr = '';
+      if (exp === 1) varStr = 'x';
+      else if (exp > 1) varStr = `x<sup>${exp}</sup>`;
+
+      return `${sign}${coefStr}${varStr}`;
+    }
+
+    function generatePoly(deg) {
+      let coeffs = [];
+      for (let i = deg; i >= 0; i--) {
+        let c = getRandomInt(-5, 5);
+        if (i === deg && c === 0) c = getRandomInt(1, 4);
+        coeffs[i] = c;
+      }
+      return coeffs;
+    }
+
+    function polyToHtml(coeffs) {
+      let str = '';
+      let isFirst = true;
+      for (let i = coeffs.length - 1; i >= 0; i--) {
+        if (coeffs[i] !== 0) {
+          str += formatTerm(coeffs[i], i, isFirst);
+          isFirst = false;
+        }
+      }
+      return str || '0';
+    }
+
+    function generateOperation(diff) {
+      const types = ['add', 'sub', 'mul_monomial', 'mul_binomial'];
+      let chosenType = types[getRandomInt(0, types.length - 1)];
+
+      if (diff === 'easy') {
+        if (chosenType === 'mul_binomial') chosenType = 'add';
+      } else if (diff === 'hard') {
+        chosenType = 'mul_binomial';
+      }
+
+      let opHtml = '';
+      let correctCoeffs = [];
+
+      if (chosenType === 'add' || chosenType === 'sub') {
+        let p1 = generatePoly(diff === 'easy' ? 2 : 3);
+        let p2 = generatePoly(diff === 'easy' ? 2 : 3);
+        let isSub = chosenType === 'sub';
+
+        let maxLen = Math.max(p1.length, p2.length);
+        correctCoeffs = new Array(maxLen).fill(0);
+
+        for (let i = 0; i < maxLen; i++) {
+          let c1 = p1[i] || 0;
+          let c2 = p2[i] || 0;
+          correctCoeffs[i] = isSub ? c1 - c2 : c1 + c2;
+        }
+
+        let sign = isSub ? '-' : '+';
+        opHtml = `(${polyToHtml(p1)}) ${sign} (${polyToHtml(p2)})`;
+
+      } else if (chosenType === 'mul_monomial') {
+        let mCoef = getRandomInt(-4, 4);
+        if (mCoef === 0) mCoef = 2;
+        let mExp = getRandomInt(1, 2);
+        let p1 = generatePoly(diff === 'easy' ? 1 : 2);
+
+        correctCoeffs = new Array(p1.length + mExp).fill(0);
+        for (let i = 0; i < p1.length; i++) {
+          correctCoeffs[i + mExp] = p1[i] * mCoef;
+        }
+
+        let mStr = formatTerm(mCoef, mExp, true);
+        opHtml = `${mStr} · (${polyToHtml(p1)})`;
+
+      } else if (chosenType === 'mul_binomial') {
+        let b1 = generatePoly(1);
+        let b2 = generatePoly(1);
+
+        correctCoeffs = [
+          (b1[0] || 0) * (b2[0] || 0),
+          (b1[0] || 0) * (b2[1] || 0) + (b1[1] || 0) * (b2[0] || 0),
+          (b1[1] || 0) * (b2[1] || 0)
+        ];
+
+        opHtml = `(${polyToHtml(b1)}) · (${polyToHtml(b2)})`;
+      }
+
+      let correctStr = polyToHtml(correctCoeffs);
+
+      let dist1Coeffs = correctCoeffs.map(c => c + getRandomInt(-2, 2));
+      let dist2Coeffs = correctCoeffs.map(c => -c);
+
+      let dist1Str = polyToHtml(dist1Coeffs);
+      let dist2Str = polyToHtml(dist2Coeffs);
+
+      if (dist1Str === correctStr) dist1Str = polyToHtml(correctCoeffs.map(c => c + 3));
+      if (dist2Str === correctStr || dist2Str === dist1Str) dist2Str = polyToHtml(correctCoeffs.map(c => c - 4));
+
+      let options = [
+        { id: 'a', text: correctStr, isCorrect: true },
+        { id: 'b', text: dist1Str, isCorrect: false },
+        { id: 'c', text: dist2Str, isCorrect: false }
+      ].sort(() => Math.random() - 0.5);
+
+      return {
+        questionHtml: opHtml,
+        options: options,
+        correctAnswerHtml: correctStr
+      };
+    }
+
+    // --- TEMPORIZADORES ---
+    function formatTime(totalSecs) {
+      let m = Math.floor(totalSecs / 60).toString().padStart(2, '0');
+      let s = (totalSecs % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function startTimers() {
+      totalTimeSeconds = 0;
+      currentRoomSeconds = 0;
+      clearInterval(globalTimerInterval);
+      clearInterval(roomTimerInterval);
+
+      globalTimerInterval = setInterval(() => {
+        totalTimeSeconds++;
+        document.getElementById('stat-timer').textContent = formatTime(totalTimeSeconds);
+      }, 1000);
+
+      roomTimerInterval = setInterval(() => {
+        currentRoomSeconds++;
+        document.getElementById('room-time-counter').textContent = formatTime(currentRoomSeconds);
+      }, 1000);
+    }
+
+    // --- FLUJO DEL JUEGO Y MECÁNICA DE COMPENSACIÓN POR ERROR ---
+    function startGame() {
+      targetCorrects = parseInt(document.getElementById('num-rooms').value) || 5;
+      difficulty = document.getElementById('difficulty').value;
+      currentCorrects = 0;
+      errorsCount = 0;
+      currentRoomIndex = 0;
+      maxReachedRoomIndex = 0;
+      roomsData = [];
+
+      // Primera sala
+      roomsData.push({
+        roomNumber: 1,
+        opData: generateOperation(difficulty),
+        selectedOption: null,
+        timeSpent: 0
+      });
+
+      document.getElementById('screen-start').classList.add('hidden');
+      document.getElementById('screen-game').classList.remove('hidden');
+      document.getElementById('game-stats').classList.remove('hidden');
+
+      startTimers();
+      renderRoom();
+    }
+
+    function renderRoom() {
+      let currentRoom = roomsData[currentRoomIndex];
+      currentRoomSeconds = currentRoom.timeSpent || 0;
+
+      document.getElementById('stat-corrects').textContent = `${currentCorrects} / ${targetCorrects}`;
+      document.getElementById('stat-room').textContent = `${currentRoomIndex + 1} (Total: ${roomsData.length})`;
+      document.getElementById('current-room-label').textContent = currentRoomIndex + 1;
+      document.getElementById('operation-display').innerHTML = currentRoom.opData.questionHtml;
+
+      let navContainer = document.getElementById('room-nav');
+      navContainer.innerHTML = '';
+      roomsData.forEach((r, idx) => {
+        let btn = document.createElement('button');
+        let isCurrent = idx === currentRoomIndex;
+        let isVisited = idx <= maxReachedRoomIndex;
+
+        btn.disabled = !isVisited;
+        btn.className = `px-3 py-1 text-xs font-bold rounded flex items-center gap-1 border transition-all ${
+          isCurrent 
+            ? 'bg-amber-500 text-black border-amber-300 font-black scale-105' 
+            : isVisited 
+              ? 'bg-stone-800 text-amber-300 border-amber-700/60 hover:bg-stone-700' 
+              : 'bg-stone-950 text-stone-600 border-stone-800 opacity-50 cursor-not-allowed'
+        }`;
+
+        btn.innerHTML = `🔥 ${idx + 1}`;
+        btn.onclick = () => {
+          saveCurrentRoomTime();
+          currentRoomIndex = idx;
+          renderRoom();
+        };
+        navContainer.appendChild(btn);
+      });
+
+      let optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = '';
+
+      currentRoom.opData.options.forEach((opt, idx) => {
+        let btn = document.createElement('button');
+        let letters = ['A', 'B', 'C'];
+        btn.className = 'option-btn font-mono text-lg font-bold p-4 rounded-lg text-amber-100 flex items-center justify-start gap-3 transition-all cursor-pointer';
+        btn.innerHTML = `<span class="bg-amber-800/60 text-amber-300 text-sm px-2 py-1 rounded">${letters[idx]}</span> <span>${opt.text}</span>`;
+        btn.onclick = () => selectOption(opt);
+        optionsContainer.appendChild(btn);
+      });
+
+      document.getElementById('btn-prev').disabled = currentRoomIndex === 0;
+      document.getElementById('btn-next').disabled = currentRoomIndex >= maxReachedRoomIndex;
+      document.getElementById('btn-prev').style.opacity = currentRoomIndex === 0 ? "0.4" : "1";
+      document.getElementById('btn-next').style.opacity = currentRoomIndex >= maxReachedRoomIndex ? "0.4" : "1";
+    }
+
+    function saveCurrentRoomTime() {
+      if (roomsData[currentRoomIndex]) {
+        roomsData[currentRoomIndex].timeSpent = currentRoomSeconds;
+      }
+    }
+
+    function selectOption(selectedOpt) {
+      saveCurrentRoomTime();
+      let currentRoom = roomsData[currentRoomIndex];
+      currentRoom.selectedOption = selectedOpt;
+
+      if (selectedOpt.isCorrect) {
+        currentCorrects++;
+      } else {
+        errorsCount++; // Cada fallo exige resolver una sala adicional
+      }
+
+      // Si ha alcanzado el número de aciertos objetivo (n), ¡Escapa!
+      if (currentCorrects >= targetCorrects) {
+        endGamePhase();
+      } else {
+        // Si aún no ha completado las n respuestas correctas, genera una nueva sala adicional
+        if (currentRoomIndex === roomsData.length - 1) {
+          roomsData.push({
+            roomNumber: roomsData.length + 1,
+            opData: generateOperation(difficulty),
+            selectedOption: null,
+            timeSpent: 0
+          });
+        }
+        currentRoomIndex++;
+        if (currentRoomIndex > maxReachedRoomIndex) {
+          maxReachedRoomIndex = currentRoomIndex;
+        }
+        currentRoomSeconds = 0;
+        renderRoom();
+      }
+    }
+
+    function navigateRoom(direction) {
+      saveCurrentRoomTime();
+      let newIdx = currentRoomIndex + direction;
+      if (newIdx >= 0 && newIdx <= maxReachedRoomIndex) {
+        currentRoomIndex = newIdx;
+        renderRoom();
+      }
+    }
+
+    function endGamePhase() {
+      clearInterval(globalTimerInterval);
+      clearInterval(roomTimerInterval);
+
+      document.getElementById('screen-game').classList.add('hidden');
+      document.getElementById('game-stats').classList.add('hidden');
+      document.getElementById('screen-arcade').classList.remove('hidden');
+      
+      document.getElementById('arcade-input-1').value = '';
+      document.getElementById('arcade-input-2').value = '';
+      document.getElementById('arcade-input-3').value = '';
+      document.getElementById('arcade-error-msg').textContent = '';
+      document.getElementById('arcade-input-1').focus();
+    }
+
+    function moveToNext(current, nextId) {
+      if (current.value.length >= 1) {
+        document.getElementById(nextId).focus();
+      }
+    }
+
+    // --- RANKING ARCADE Y RESUMEN ---
+    function submitArcadeName() {
+      let l1 = document.getElementById('arcade-input-1').value.trim().toLowerCase();
+      let l2 = document.getElementById('arcade-input-2').value.trim().toLowerCase();
+      let l3 = document.getElementById('arcade-input-3').value.trim().toLowerCase();
+      let rawName = l1 + l2 + l3;
+      let errorMsg = document.getElementById('arcade-error-msg');
+
+      if (rawName.length !== 3 || !/^[a-z]{3}$/.test(rawName) || bannedNames.has(rawName)) {
+        errorMsg.textContent = "Nombre inválido";
+        document.getElementById('arcade-input-1').value = '';
+        document.getElementById('arcade-input-2').value = '';
+        document.getElementById('arcade-input-3').value = '';
+        document.getElementById('arcade-input-1').focus();
+        return;
+      }
+
+      let upperName = rawName.toUpperCase();
+      let randomNum = Math.floor(Math.random() * 900) + 100;
+      let finalTag = `${upperName}-${randomNum}`;
+
+      let totalPlayed = roomsData.length; // n + e
+
+      currentPlayerResult = {
+        nameTag: finalTag,
+        correct: targetCorrects,
+        played: totalPlayed,
+        ratioValue: targetCorrects / totalPlayed,
+        timeSeconds: totalTimeSeconds,
+        roomsData: [...roomsData]
+      };
+
+      saveAndShowResults();
+    }
+
+    function getStoredRanking() {
+      let stored = localStorage.getItem('templo_algebra_ranking');
+      if (stored) {
+        try { return JSON.parse(stored); } catch(e) { }
+      }
+      return [
+        { nameTag: "ZEUS-482", correct: 5, played: 5, ratioValue: 1.0, timeSeconds: 42 },
+        { nameTag: "MAYA-912", correct: 5, played: 5, ratioValue: 1.0, timeSeconds: 58 },
+        { nameTag: "PI-314", correct: 4, played: 5, ratioValue: 0.8, timeSeconds: 50 }
+      ];
+    }
+
+    function saveAndShowResults() {
+      let ranking = getStoredRanking();
+      ranking.push(currentPlayerResult);
+
+      ranking.sort((a, b) => {
+        if (b.ratioValue !== a.ratioValue) {
+          return b.ratioValue - a.ratioValue;
+        }
+        return a.timeSeconds - b.timeSeconds;
+      });
+
+      ranking = ranking.slice(0, 20);
+      localStorage.setItem('templo_algebra_ranking', JSON.stringify(ranking));
+
+      let playerRank = ranking.findIndex(item => item === currentPlayerResult) + 1;
+
+      document.getElementById('screen-arcade').classList.add('hidden');
+      document.getElementById('screen-summary').classList.remove('hidden');
+
+      document.getElementById('player-tag').textContent = currentPlayerResult.nameTag;
+      document.getElementById('sum-rooms').textContent = targetCorrects;
+      document.getElementById('sum-errors').textContent = errorsCount;
+      document.getElementById('sum-ratio').textContent = `${currentPlayerResult.correct}/${currentPlayerResult.played}`;
+      document.getElementById('sum-time').textContent = formatTime(currentPlayerResult.timeSeconds);
+
+      let rankBadge = document.getElementById('player-rank-badge');
+      if (playerRank > 0) {
+        rankBadge.textContent = `Puesto: #${playerRank}`;
+      } else {
+        rankBadge.textContent = `Fuera del Top 20`;
+      }
+
+      let detailsContainer = document.getElementById('summary-details');
+      detailsContainer.innerHTML = '';
+      currentPlayerResult.roomsData.forEach((room, idx) => {
+        let isCorrect = room.selectedOption && room.selectedOption.isCorrect;
+        let card = document.createElement('div');
+        card.className = `p-3 rounded border text-xs flex flex-col gap-1 ${
+          isCorrect ? 'bg-emerald-950/40 border-emerald-600/50' : 'bg-rose-950/40 border-rose-600/50'
+        }`;
+
+        let statusBadge = isCorrect 
+          ? `<span class="text-emerald-300 font-bold">✓ ACERTADA</span>`
+          : `<span class="text-rose-300 font-bold">✗ FALLADA</span>`;
+
+        card.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-amber-300">Sala ${idx + 1}</span>
+            ${statusBadge}
+            <span class="text-amber-400/70 font-mono">⏱️ ${formatTime(room.timeSpent || 0)}</span>
+          </div>
+          <div class="font-mono text-amber-100 text-sm">${room.opData.questionHtml}</div>
+          <div class="text-amber-300/80">
+            Elegida: <span class="font-mono ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">${room.selectedOption ? room.selectedOption.text : 'Ninguna'}</span> |
+            Correcta: <span class="font-mono text-emerald-400">${room.opData.correctAnswerHtml}</span>
+          </div>
+        `;
+        detailsContainer.appendChild(card);
+      });
+
+      let tableBody = document.getElementById('ranking-table-body');
+      tableBody.innerHTML = '';
+      ranking.forEach((entry, idx) => {
+        let isCurrentPlayer = entry === currentPlayerResult;
+        let row = document.createElement('tr');
+        row.className = isCurrentPlayer ? 'bg-amber-600/30 text-amber-200 font-bold border-b border-amber-600/50' : 'hover:bg-stone-800/50 border-b border-amber-900/20';
+
+        row.innerHTML = `
+          <td class="p-2 text-center text-amber-400 font-bold">#${idx + 1}</td>
+          <td class="p-2 font-arcade tracking-wider text-amber-200">${entry.nameTag}</td>
+          <td class="p-2 text-center">${entry.correct}/${entry.played}</td>
+          <td class="p-2 text-right font-mono text-amber-300">${formatTime(entry.timeSeconds)}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function resetGame() {
+      document.getElementById('screen-summary').classList.add('hidden');
+      document.getElementById('screen-start').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
