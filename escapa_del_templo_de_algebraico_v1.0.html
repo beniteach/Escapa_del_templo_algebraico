@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escapa del templo de algebraico</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        temple: {
+                            stone: '#1e222a',
+                            darkstone: '#111318',
+                            gold: '#d97706',
+                            goldlight: '#f59e0b',
+                            jungle: '#064e3b',
+                            junglelight: '#065f46',
+                            accent: '#b45309'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700&family=MedievalSharp&display=swap');
+        
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .font-temple { font-family: 'MedievalSharp', cursive, serif; }
+        
+        .stone-bg {
+            background-color: #181c24;
+            background-image: radial-gradient(circle at 50% 50%, #262d3d 0%, #11141b 100%);
+        }
+        
+        .temple-border {
+            border: 3px solid #d97706;
+            box-shadow: 0 0 25px rgba(217, 119, 6, 0.25), inset 0 0 15px rgba(0, 0, 0, 0.6);
+        }
+        
+        .torch-glow {
+            animation: flicker 2s infinite alternate;
+        }
+        
+        @keyframes flicker {
+            0% { opacity: 0.8; filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 15px rgba(245, 158, 11, 1)); }
+            100% { opacity: 0.85; filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.7)); }
+        }
+
+        .option-card {
+            transition: all 0.25s ease;
+        }
+        .option-card:hover {
+            transform: translateY(-2px);
+            border-color: #f59e0b;
+        }
+    </style>
+</head>
+<body class="stone-bg text-stone-100 h-full flex flex-col justify-between selection:bg-amber-500 selection:text-stone-900 overflow-x-hidden">
+
+    <!-- Top Navigation / Header -->
+    <header class="bg-temple-darkstone/90 border-b border-amber-600/40 py-4 px-6 shadow-lg backdrop-blur-md relative z-20">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl torch-glow">🔥</span>
+                <h1 class="font-cinzel text-xl sm:text-2xl font-bold tracking-wider text-amber-400 drop-shadow-md">
+                    Escapa del Templo de Algebraico
+                </h1>
+            </div>
+            <div id="status-header" class="hidden flex flex-wrap items-center justify-center gap-3 text-sm">
+                <div class="bg-stone-800/80 px-3 py-1.5 rounded-lg border border-amber-500/30 flex items-center space-x-2">
+                    <span class="text-amber-400 font-semibold">Sala:</span>
+                    <span id="header-room-indicator" class="font-bold text-white">1 / 5</span>
+                </div>
+                <div class="bg-stone-800/80 px-3 py-1.5 rounded-lg border border-emerald-500/30 flex items-center space-x-2">
+                    <span class="text-emerald-400 font-semibold">Errores (e):</span>
+                    <span id="header-error-indicator" class="font-bold text-white">0</span>
+                </div>
+                <!-- Live Timer Display -->
+                <div class="bg-stone-800/80 px-3 py-1.5 rounded-lg border border-amber-400/40 flex items-center space-x-2 font-mono">
+                    <span class="text-amber-300">⏱️</span>
+                    <span id="header-timer-indicator" class="font-bold text-amber-300">00:00</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6 relative">
+        <!-- Jungle foliage decorative watermarks -->
+        <div class="absolute inset-0 pointer-events-none opacity-10 bg-[radial-gradient(#059669_1px,transparent_1px)] [background-size:24px_24px]"></div>
+
+        <!-- SCREEN 1: START SCREEN -->
+        <div id="start-screen" class="w-full max-w-2xl bg-stone-900/95 temple-border rounded-2xl p-6 sm:p-10 shadow-2xl relative z-10 text-center">
+            <div class="inline-block p-4 rounded-full bg-amber-500/10 border border-amber-500/30 mb-4 torch-glow">
+                <span class="text-5xl">🗿</span>
+            </div>
+            <h2 class="font-cinzel text-2xl sm:text-4xl font-bold text-amber-400 mb-3">Expedición al Templo Perdido</h2>
+            <p class="text-stone-300 text-sm sm:text-base mb-6 leading-relaxed">
+                Bienvenido, intrépido explorador matemático. Selecciona la dificultad de tu expedición y resuelve las operaciones con polinomios para escapar de las profundidades del templo.
+            </p>
+            
+            <div class="bg-stone-800/80 border border-stone-700 rounded-xl p-5 mb-6 text-left space-y-3">
+                <h3 class="font-cinzel text-amber-400 font-semibold text-sm sm:text-base flex items-center gap-2">
+                    <span>📜</span> Reglas de la Expedición:
+                </h3>
+                <ul class="text-xs sm:text-sm text-stone-300 space-y-2 list-disc list-inside">
+                    <li>Elige el número de salas iniciales (<span class="text-amber-300">n</span>, entre 3 y 10) y la dificultad.</li>
+                    <li>Cada respuesta incorrecta añadirá <span class="text-red-400 font-bold">1 sala adicional (e)</span> a tu recorrido ($n + e$).</li>
+                    <li>Navega libremente (◀ Anterior / Siguiente ▶) para revisar tus respuestas antes de finalizar.</li>
+                    <li>El reloj medirá tu tiempo global y el tiempo dedicado a cada sala.</li>
+                </ul>
+            </div>
+
+            <!-- Options Form -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 text-left">
+                <!-- Room count input -->
+                <div class="bg-stone-800/50 p-4 rounded-xl border border-stone-700/80 flex flex-col justify-center">
+                    <label for="rooms-input" class="font-cinzel text-xs text-amber-400 font-semibold mb-2 block">
+                        Número de salas iniciales (n):
+                    </label>
+                    <input type="number" id="rooms-input" min="3" max="10" value="5" 
+                        class="w-full bg-stone-900 border-2 border-amber-600/60 rounded-xl px-4 py-2 text-center text-xl font-bold text-amber-400 focus:outline-none focus:border-amber-400 transition">
+                </div>
+
+                <!-- Difficulty selection -->
+                <div class="bg-stone-800/50 p-4 rounded-xl border border-stone-700/80 flex flex-col justify-center">
+                    <label for="difficulty-select" class="font-cinzel text-xs text-amber-400 font-semibold mb-2 block">
+                        Dificultad de los Polinomios:
+                    </label>
+                    <select id="difficulty-select" class="w-full bg-stone-900 border-2 border-amber-600/60 rounded-xl px-3 py-2.5 text-center text-base font-bold text-amber-300 focus:outline-none focus:border-amber-400 transition cursor-pointer">
+                        <option value="baja">🌱 Baja (Grado 1-2, Suma/Monomios)</option>
+                        <option value="media" selected>⚔️ Media (3º/4º ESO, Binomios)</option>
+                        <option value="alta">🔥 Alta (Avanzada, Polinomios Grado 2-4)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-cinzel font-bold text-lg rounded-xl shadow-lg hover:shadow-amber-500/30 transition transform hover:-translate-y-0.5">
+                ⚔️ Comenzar Expedición
+            </button>
+        </div>
+
+        <!-- SCREEN 2: GAMEPLAY SCREEN -->
+        <div id="game-screen" class="hidden w-full max-w-4xl bg-stone-900/95 temple-border rounded-2xl p-5 sm:p-8 shadow-2xl relative z-10 flex flex-col min-h-[500px] justify-between">
+            
+            <!-- Top Room Progress Bar -->
+            <div>
+                <div class="flex justify-between items-center mb-3">
+                    <span id="room-title-label" class="font-cinzel text-amber-400 font-bold text-base sm:text-lg">Sala 1 de 5</span>
+                    <span id="error-badge" class="text-xs px-3 py-1 rounded-full bg-stone-800 border border-stone-700 text-stone-300">Camino limpio</span>
+                </div>
+                <!-- Torch Progress Indicator -->
+                <div id="torches-progress" class="flex items-center justify-between gap-1 bg-stone-950/60 p-2 rounded-xl border border-stone-800 overflow-x-auto">
+                    <!-- Dynamic torches inserted via JS -->
+                </div>
+            </div>
+
+            <!-- Central Chamber: Polynomial Operation & Options -->
+            <div class="my-6 flex-grow flex flex-col justify-center">
+                <div class="text-center mb-6">
+                    <span class="text-xs uppercase tracking-widest text-amber-500/80 font-semibold block mb-1">Operación Polinómica en el Altar</span>
+                    <div id="poly-display" class="bg-stone-950/80 border-2 border-amber-600/40 rounded-2xl p-6 sm:p-8 text-2xl sm:text-4xl font-mono text-amber-300 shadow-inner overflow-x-auto flex items-center justify-center min-h-[120px]">
+                        <!-- Math expression inserted here -->
+                    </div>
+                </div>
+
+                <!-- Options A, B, C -->
+                <div class="space-y-3 max-w-2xl mx-auto w-full">
+                    <p class="text-xs text-stone-400 text-center mb-2 font-medium">Selecciona la opción correcta:</p>
+                    <div id="options-container" class="grid grid-cols-1 gap-3">
+                        <!-- Options generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Footer -->
+            <div class="pt-4 border-t border-stone-800 flex justify-between items-center">
+                <button id="prev-btn" onclick="prevRoom()" class="px-5 py-2.5 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-xl font-cinzel text-sm font-semibold text-stone-300 transition flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+                    ◀ Sala Anterior
+                </button>
+                <div id="nav-info" class="text-xs text-stone-400 hidden sm:block">
+                    Navega libremente para revisar tus respuestas
+                </div>
+                <button id="next-btn" onclick="nextRoom()" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-stone-950 rounded-xl font-cinzel text-sm font-bold transition flex items-center gap-2 shadow-md">
+                    <span>Sala Siguiente</span> ▶
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: FINAL SUMMARY SCREEN -->
+        <div id="summary-screen" class="hidden w-full max-w-4xl bg-stone-900/95 temple-border rounded-2xl p-6 sm:p-8 shadow-2xl relative z-10 max-h-[90vh] flex flex-col">
+            <div class="text-center mb-6">
+                <div id="summary-icon" class="text-5xl mb-2">🏛️</div>
+                <h2 id="summary-title" class="font-cinzel text-2xl sm:text-3xl font-bold text-amber-400">Expedición Finalizada</h2>
+                <p id="summary-subtitle" class="text-stone-300 text-sm mt-1">Resumen del templo y estado de tu fuga algebraica.</p>
+            </div>
+
+            <!-- Stats Overview Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                <div class="bg-stone-950/80 p-3 rounded-xl border border-stone-800 text-center">
+                    <div class="text-xs text-stone-400">Salas Totales</div>
+                    <div id="stat-total-rooms" class="text-lg sm:text-2xl font-bold text-amber-400 font-cinzel">5</div>
+                </div>
+                <div class="bg-stone-950/80 p-3 rounded-xl border border-stone-800 text-center">
+                    <div class="text-xs text-stone-400">Aciertos</div>
+                    <div id="stat-correct" class="text-lg sm:text-2xl font-bold text-emerald-400 font-cinzel">0</div>
+                </div>
+                <div class="bg-stone-950/80 p-3 rounded-xl border border-stone-800 text-center">
+                    <div class="text-xs text-stone-400">Errores (e)</div>
+                    <div id="stat-errors" class="text-lg sm:text-2xl font-bold text-red-400 font-cinzel">0</div>
+                </div>
+                <div class="bg-stone-950/80 p-3 rounded-xl border border-stone-800 text-center">
+                    <div class="text-xs text-stone-400">Tiempo Total</div>
+                    <div id="stat-total-time" class="text-lg sm:text-2xl font-bold text-amber-300 font-mono">00:00</div>
+                </div>
+            </div>
+
+            <!-- Detailed Room Breakdown List -->
+            <div class="flex-grow overflow-y-auto space-y-3 pr-2 mb-6" id="summary-list">
+                <!-- Dynamically populated review cards -->
+            </div>
+
+            <!-- Restart Button -->
+            <div class="text-center pt-2">
+                <button onclick="restartGame()" class="px-8 py-3.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-cinzel font-bold rounded-xl shadow-lg transition">
+                    🔄 Nueva Expedición en el Templo
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-stone-950/80 border-t border-stone-800 py-3 text-center text-xs text-stone-500">
+        Escapa del Templo de Algebraico • Matemáticas 3º/4º ESO & Bachillerato • Metodología Educativa Interactiva
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Game State Variables
+        let nRooms = 5;
+        let difficulty = 'media';
+        let currentRoom = 0;
+        let rooms = [];
+        let timerInterval = null;
+        let totalTimeSeconds = 0;
+        let roomStartTime = 0;
+
+        // Helper random integer function
+        function randInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Format seconds into MM:SS format
+        function formatTime(seconds) {
+            let m = Math.floor(seconds / 60);
+            let s = Math.floor(seconds % 60);
+            return `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
+        }
+
+        // Format polynomial coefficient array to HTML string
+        function formatPoly(coeffs) {
+            let terms = [];
+            let degree = coeffs.length - 1;
+            for (let i = 0; i < coeffs.length; i++) {
+                let c = coeffs[i];
+                if (c === 0 && coeffs.length > 1) continue;
+                let deg = degree - i;
+                let sign = '';
+                let absC = Math.abs(c);
+                
+                if (i === 0) {
+                    if (c < 0) sign = '-';
+                } else {
+                    sign = c >= 0 ? ' + ' : ' - ';
+                }
+                
+                let coeffStr = '';
+                if (deg === 0) {
+                    coeffStr = absC.toString();
+                } else if (absC === 1) {
+                    coeffStr = deg === 1 ? 'x' : `x<sup>${deg}</sup>`;
+                } else {
+                    coeffStr = deg === 1 ? `${absC}x` : `${absC}x<sup>${deg}</sup>`;
+                }
+                terms.push(sign + coeffStr);
+            }
+            let res = terms.join('').trim();
+            if (res.startsWith('+ ')) res = res.substring(2);
+            return res === '' ? '0' : res;
+        }
+
+        function arraysEqual(a, b) {
+            if (a.length !== b.length) return false;
+            for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+            return true;
+        }
+
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Generate Polynomial Operations tailored to Difficulty level
+        function generateRandomOperation(diff) {
+            let exprHtml = '';
+            let correctCoeffs = [];
+            
+            if (diff === 'baja') {
+                // BAJA: Sums/subs of degree 1-2, simple monomial x polynomial
+                const types = ['sum_low', 'sub_low', 'mul_mono_low'];
+                const type = types[Math.floor(Math.random() * types.length)];
+
+                if (type === 'sum_low' || type === 'sub_low') {
+                    let p = [randInt(-3, 4), randInt(-5, 5), randInt(-7, 7)];
+                    let q = [randInt(-3, 4), randInt(-5, 5), randInt(-7, 7)];
+                    if (p[0] === 0) p[0] = 2;
+                    if (q[0] === 0) q[0] = -1;
+
+                    let isSum = type === 'sum_low';
+                    correctCoeffs = isSum ? [p[0]+q[0], p[1]+q[1], p[2]+q[2]] : [p[0]-q[0], p[1]-q[1], p[2]-q[2]];
+                    exprHtml = `(${formatPoly(p)}) ${isSum ? '+' : '-'} (${formatPoly(q)})`;
+                } else {
+                    let k = randInt(-3, 4); if (k === 0) k = 2;
+                    let p = [randInt(-3, 4), randInt(-5, 5)];
+                    if (p[0] === 0) p[0] = 1;
+
+                    correctCoeffs = [k * p[0], k * p[1], 0];
+                    exprHtml = `(${k === 1 ? '' : k === -1 ? '-' : k}x) · (${formatPoly(p)})`;
+                }
+            } else if (diff === 'alta') {
+                // ALTA: Advanced degree 2-4 polynomials, (ax^2+b)(cx^2+d), (ax+b)(cx^2+dx+e)
+                const types = ['mul_quad_binom', 'mul_poly_tri', 'ident_sq'];
+                const type = types[Math.floor(Math.random() * types.length)];
+
+                if (type === 'mul_quad_binom') {
+                    let a = randInt(1, 3);
+                    let b = randInt(-5, 5); if(b===0) b=2;
+                    let c = randInt(1, 3);
+                    let d = randInt(-5, 5); if(d===0) d=-3;
+
+                    // (ax^2 + b)(cx^2 + d) -> ac*x^4 + (ad+bc)*x^2 + bd
+                    correctCoeffs = [a*c, 0, (a*d + b*c), 0, b*d];
+                    let bin1 = `${a === 1 ? '' : a}x<sup>2</sup> ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}`;
+                    let bin2 = `${c === 1 ? '' : c}x<sup>2</sup> ${d >= 0 ? '+ ' + d : '- ' + Math.abs(d)}`;
+                    exprHtml = `(${bin1}) · (${bin2})`;
+                } else if (type === 'mul_poly_tri') {
+                    let a = randInt(1, 2);
+                    let b = randInt(-3, 3); if(b===0) b=1;
+                    let p = [randInt(1, 2), randInt(-3, 3), randInt(-4, 4)];
+                    
+                    // (ax + b)(p0*x^2 + p1*x + p2)
+                    let c3 = a * p[0];
+                    let c2 = a * p[1] + b * p[0];
+                    let c1 = a * p[2] + b * p[1];
+                    let c0 = b * p[2];
+                    correctCoeffs = [c3, c2, c1, c0];
+
+                    let bin = `${a === 1 ? '' : a}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}`;
+                    exprHtml = `(${bin}) · (${formatPoly(p)})`;
+                } else {
+                    // Identity: (ax + b)^2
+                    let a = randInt(1, 4);
+                    let b = randInt(-5, 5); if(b===0) b=-2;
+                    
+                    correctCoeffs = [a*a, 2*a*b, b*b];
+                    let bin = `${a === 1 ? '' : a}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}`;
+                    exprHtml = `(${bin})<sup>2</sup>`;
+                }
+            } else {
+                // MEDIA: Standard 3º/4º ESO (sums, (ax+b)(cx+d), monomial * degree 2)
+                const types = ['sum', 'sub', 'mul_mono', 'mul_binom'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                
+                if (type === 'sum' || type === 'sub') {
+                    let p = [randInt(-4, 5), randInt(-5, 5), randInt(-6, 6), randInt(-8, 8)];
+                    let q = [randInt(-4, 5), randInt(-5, 5), randInt(-6, 6), randInt(-8, 8)];
+                    if (p[0] === 0) p[0] = 3;
+                    if (q[0] === 0) q[0] = 1;
+                    
+                    let isSum = type === 'sum';
+                    correctCoeffs = isSum ? [p[0]+q[0], p[1]+q[1], p[2]+q[2], p[3]+q[3]] : [p[0]-q[0], p[1]-q[1], p[2]-q[2], p[3]-q[3]];
+                    exprHtml = `(${formatPoly(p)}) ${isSum ? '+' : '-'} (${formatPoly(q)})`;
+                } else if (type === 'mul_mono') {
+                    let monoCoeff = randInt(-3, 4); if (monoCoeff === 0) monoCoeff = 2;
+                    let p = [randInt(-3, 4), randInt(-5, 5), randInt(-8, 8)];
+                    if (p[0] === 0) p[0] = 2;
+                    
+                    correctCoeffs = [monoCoeff*p[0], monoCoeff*p[1], monoCoeff*p[2], 0];
+                    let monoStr = `${monoCoeff === 1 ? '' : monoCoeff === -1 ? '-' : monoCoeff}x`;
+                    exprHtml = `(${monoStr}) · (${formatPoly(p)})`;
+                } else {
+                    let a = randInt(1, 3);
+                    let b = randInt(-5, 5); if(b===0) b=2;
+                    let c = randInt(1, 3);
+                    let d = randInt(-5, 5); if(d===0) d=-3;
+                    
+                    correctCoeffs = [a * c, a * d + b * c, b * d];
+                    let bin1 = `${a === 1 ? '' : a}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}`;
+                    let bin2 = `${c === 1 ? '' : c}x ${d >= 0 ? '+ ' + d : '- ' + Math.abs(d)}`;
+                    exprHtml = `(${bin1}) · (${bin2})`;
+                }
+            }
+            
+            let correctStr = formatPoly(correctCoeffs);
+            
+            // Distractors based on common student errors
+            let dist1Coeffs = correctCoeffs.map(val => val + randInt(-2, 3));
+            let dist2Coeffs = correctCoeffs.map(val => val + randInt(-3, 3));
+            if (arraysEqual(dist1Coeffs, correctCoeffs)) dist1Coeffs[0] += 1;
+            if (arraysEqual(dist2Coeffs, correctCoeffs) || arraysEqual(dist2Coeffs, dist1Coeffs)) dist2Coeffs[dist2Coeffs.length - 1] -= 2;
+            
+            let dist1Str = formatPoly(dist1Coeffs);
+            let dist2Str = formatPoly(dist2Coeffs);
+            
+            let options = [
+                { text: correctStr, isCorrect: true },
+                { text: dist1Str, isCorrect: false },
+                { text: dist2Str, isCorrect: false }
+            ];
+            options = shuffleArray(options);
+            
+            return {
+                exprHtml,
+                correctText: correctStr,
+                options,
+                userChoice: null,
+                timeSpentSeconds: 0
+            };
+        }
+
+        // Timer management
+        function startTimer() {
+            totalTimeSeconds = 0;
+            roomStartTime = Date.now();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                totalTimeSeconds++;
+                document.getElementById('header-timer-indicator').innerText = formatTime(totalTimeSeconds);
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function recordRoomTime() {
+            if (rooms[currentRoom]) {
+                let now = Date.now();
+                let elapsed = Math.round((now - roomStartTime) / 1000);
+                rooms[currentRoom].timeSpentSeconds += elapsed;
+                roomStartTime = now;
+            }
+        }
+
+        // Start Game with chosen n rooms & difficulty
+        function startGame() {
+            const inputVal = parseInt(document.getElementById('rooms-input').value);
+            if (isNaN(inputVal) || inputVal < 3 || inputVal > 10) {
+                alertCustom("Por favor, introduce un número de salas válido entre 3 y 10.");
+                return;
+            }
+            nRooms = inputVal;
+            difficulty = document.getElementById('difficulty-select').value;
+            currentRoom = 0;
+            rooms = [];
+            for (let i = 0; i < nRooms; i++) {
+                rooms.push(generateRandomOperation(difficulty));
+            }
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('summary-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('status-header').classList.remove('hidden');
+
+            startTimer();
+            renderRoom();
+        }
+
+        // Calculate current errors (e)
+        function countErrors() {
+            let errs = 0;
+            for (let i = 0; i < rooms.length; i++) {
+                if (rooms[i].userChoice !== null) {
+                    const chosenOpt = rooms[i].options[rooms[i].userChoice];
+                    if (!chosenOpt.isCorrect) {
+                        errs++;
+                    }
+                }
+            }
+            return errs;
+        }
+
+        // Adjust room array dynamically if errors change total required rooms ($n + e$)
+        function updateRoomCapacity() {
+            let errs = countErrors();
+            let requiredTotal = nRooms + errs;
+            
+            while (rooms.length < requiredTotal) {
+                rooms.push(generateRandomOperation(difficulty));
+            }
+        }
+
+        // Render current room state
+        function renderRoom() {
+            updateRoomCapacity();
+            let errs = countErrors();
+            let totalActiveRooms = nRooms + errs;
+
+            // Reset room start time ticker for current room
+            roomStartTime = Date.now();
+
+            // Update Header & Indicators
+            document.getElementById('header-room-indicator').innerText = `${currentRoom + 1} / ${totalActiveRooms}`;
+            document.getElementById('header-error-indicator').innerText = errs;
+            document.getElementById('room-title-label').innerText = `Sala ${currentRoom + 1} de ${totalActiveRooms} (${difficulty.toUpperCase()})`;
+            
+            if (errs === 0) {
+                document.getElementById('error-badge').innerText = "Camino limpio 🌿";
+                document.getElementById('error-badge').className = "text-xs px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-600/40 text-emerald-300 font-medium";
+            } else {
+                document.getElementById('error-badge').innerText = `Desvío por errores: +${errs} sala(s) 🔥`;
+                document.getElementById('error-badge').className = "text-xs px-3 py-1 rounded-full bg-amber-950/80 border border-amber-600/40 text-amber-300 font-medium";
+            }
+
+            // Render Torches Progress Bar
+            let torchesHTML = '';
+            for (let i = 0; i < totalActiveRooms; i++) {
+                let isVisited = rooms[i] && rooms[i].userChoice !== null;
+                let isCurrent = i === currentRoom;
+                let torchIcon = isVisited ? '🔥' : '🕯️';
+                let borderColor = isCurrent ? 'border-amber-400 bg-amber-500/20' : isVisited ? 'border-amber-600/60 bg-stone-900' : 'border-stone-800 bg-stone-950';
+                
+                torchesHTML += `
+                    <div onclick="jumpToRoom(${i})" class="flex-1 min-w-[36px] h-10 rounded-lg border ${borderColor} flex flex-col items-center justify-center cursor-pointer transition hover:border-amber-400 group relative" title="Sala ${i+1}">
+                        <span class="text-xs ${isCurrent ? 'torch-glow' : 'opacity-70'}">${torchIcon}</span>
+                        <span class="text-[10px] text-stone-400 font-mono">${i+1}</span>
+                    </div>
+                `;
+            }
+            document.getElementById('torches-progress').innerHTML = torchesHTML;
+
+            // Render Polynomial Expression
+            const roomData = rooms[currentRoom];
+            document.getElementById('poly-display').innerHTML = roomData.exprHtml;
+
+            // Render Options
+            let optionsHTML = '';
+            roomData.options.forEach((opt, idx) => {
+                let isSelected = roomData.userChoice === idx;
+                let bgStyle = isSelected ? 'bg-amber-600/30 border-amber-400 shadow-md' : 'bg-stone-950/70 border-stone-800 hover:border-amber-600/50';
+                
+                optionsHTML += `
+                    <div onclick="selectOption(${idx})" class="option-card p-4 rounded-xl border-2 ${bgStyle} cursor-pointer flex items-center justify-between transition">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-8 h-8 rounded-lg bg-stone-800 border border-stone-700 flex items-center justify-center font-cinzel font-bold text-amber-400 text-sm">
+                                ${['A', 'B', 'C'][idx]}
+                            </span>
+                            <span class="font-mono text-lg text-stone-200">${opt.text}</span>
+                        </div>
+                        <div class="w-6 h-6 rounded-full border-2 ${isSelected ? 'border-amber-400 bg-amber-400' : 'border-stone-700'} flex items-center justify-center">
+                            ${isSelected ? '<span class="text-stone-950 text-xs font-bold">✓</span>' : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('options-container').innerHTML = optionsHTML;
+
+            // Navigation Buttons state
+            document.getElementById('prev-btn').disabled = currentRoom === 0;
+            
+            const nextBtn = document.getElementById('next-btn');
+            if (currentRoom === totalActiveRooms - 1) {
+                nextBtn.innerHTML = `<span>Intentar Escapar</span> 🏛️`;
+            } else {
+                nextBtn.innerHTML = `<span>Sala Siguiente</span> ▶`;
+            }
+        }
+
+        // Select an option for current room
+        function selectOption(optIndex) {
+            recordRoomTime();
+            rooms[currentRoom].userChoice = optIndex;
+            updateRoomCapacity();
+            renderRoom();
+
+            // Auto-advance if not last room
+            let totalActiveRooms = nRooms + countErrors();
+            if (currentRoom < totalActiveRooms - 1) {
+                setTimeout(() => {
+                    recordRoomTime();
+                    currentRoom++;
+                    renderRoom();
+                }, 300);
+            }
+        }
+
+        // Navigation controls
+        function prevRoom() {
+            if (currentRoom > 0) {
+                recordRoomTime();
+                currentRoom--;
+                renderRoom();
+            }
+        }
+
+        function nextRoom() {
+            recordRoomTime();
+            let totalActiveRooms = nRooms + countErrors();
+            if (currentRoom < totalActiveRooms - 1) {
+                currentRoom++;
+                renderRoom();
+            } else {
+                // Check if all rooms up to totalActiveRooms have been answered
+                let unansweredCount = 0;
+                for (let i = 0; i < totalActiveRooms; i++) {
+                    if (rooms[i].userChoice === null) unansweredCount++;
+                }
+
+                if (unansweredCount > 0) {
+                    alertCustom(`Aún tienes ${unansweredCount} sala(s) sin responder en tu camino. Revísalas antes de escapar.`);
+                    return;
+                }
+
+                stopTimer();
+                showSummaryScreen();
+            }
+        }
+
+        function jumpToRoom(roomIdx) {
+            let totalActiveRooms = nRooms + countErrors();
+            if (roomIdx < totalActiveRooms) {
+                recordRoomTime();
+                currentRoom = roomIdx;
+                renderRoom();
+            }
+        }
+
+        // Custom notification
+        function alertCustom(msg) {
+            let banner = document.createElement('div');
+            banner.className = "fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-amber-600 text-stone-950 font-cinzel font-bold px-6 py-3 rounded-xl shadow-2xl border-2 border-amber-300 animate-bounce";
+            banner.innerText = msg;
+            document.body.appendChild(banner);
+            setTimeout(() => banner.remove(), 3500);
+        }
+
+        // Show Final Summary Screen
+        function showSummaryScreen() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('status-header').classList.add('hidden');
+            document.getElementById('summary-screen').classList.remove('hidden');
+
+            let totalActiveRooms = nRooms + countErrors();
+            let correctCount = 0;
+            let errorCount = 0;
+
+            for (let i = 0; i < totalActiveRooms; i++) {
+                let chosen = rooms[i].userChoice;
+                let opt = rooms[i].options[chosen];
+                if (opt && opt.isCorrect) correctCount++;
+                else errorCount++;
+            }
+
+            document.getElementById('stat-total-rooms').innerText = totalActiveRooms;
+            document.getElementById('stat-correct').innerText = correctCount;
+            document.getElementById('stat-errors').innerText = errorCount;
+            document.getElementById('stat-total-time').innerText = formatTime(totalTimeSeconds);
+
+            const summaryIcon = document.getElementById('summary-icon');
+            const summaryTitle = document.getElementById('summary-title');
+            const summarySubtitle = document.getElementById('summary-subtitle');
+
+            if (errorCount === 0) {
+                summaryIcon.innerText = "🌟🏆🌟";
+                summaryTitle.innerText = "¡Escapaste con Éxito Absoluto!";
+                summarySubtitle.innerText = `Has completado el templo en nivel ${difficulty.toUpperCase()} en ${formatTime(totalTimeSeconds)} sin cometer ningún error.`;
+            } else {
+                summaryIcon.innerText = "🏛️🔥";
+                summaryTitle.innerText = "¡Expedición Completada con Desvíos!";
+                summarySubtitle.innerText = `Lograste salir en ${formatTime(totalTimeSeconds)} tras rehacer ${errorCount} sala(s) en dificultad ${difficulty.toUpperCase()}.`;
+            }
+
+            // Populate detailed summary list with per-room timings
+            let listHTML = '';
+            for (let i = 0; i < totalActiveRooms; i++) {
+                let room = rooms[i];
+                let chosenIdx = room.userChoice;
+                let chosenOpt = room.options[chosenIdx];
+                let isCorrect = chosenOpt && chosenOpt.isCorrect;
+
+                let badgeColor = isCorrect ? 'bg-emerald-950 text-emerald-300 border-emerald-600/50' : 'bg-red-950 text-red-300 border-red-600/50';
+                let statusText = isCorrect ? '✓ Acertado' : '✗ Fallado';
+
+                listHTML += `
+                    <div class="bg-stone-950/80 border border-stone-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div class="space-y-1">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-cinzel text-xs text-amber-400 font-bold">Sala ${i+1}</span>
+                                <span class="text-xs px-2 py-0.5 rounded border ${badgeColor}">${statusText}</span>
+                                <span class="text-xs font-mono text-amber-300 bg-stone-900 px-2 py-0.5 rounded border border-stone-700">⏱️ ${formatTime(room.timeSpentSeconds)}</span>
+                            </div>
+                            <div class="font-mono text-sm text-stone-300">Operación: <span class="text-amber-300">${room.exprHtml}</span></div>
+                            <div class="font-mono text-xs text-stone-400">Tu respuesta: <span class="${isCorrect ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}">${chosenOpt ? chosenOpt.text : 'Ninguna'}</span></div>
+                            ${!isCorrect ? `<div class="font-mono text-xs text-emerald-400">Respuesta correcta: ${room.correctText}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+            document.getElementById('summary-list').innerHTML = listHTML;
+        }
+
+        function restartGame() {
+            stopTimer();
+            document.getElementById('summary-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
