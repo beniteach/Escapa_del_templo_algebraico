@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Escapa del templo de algebraico</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase App & Firestore SDK (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Montserrat:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
   <style>
     body {
@@ -144,7 +148,7 @@
       <!-- PANTALLA ARCADE: INTRODUCIR NOMBRE (3 LETRAS) -->
       <section id="screen-arcade" class="hidden bg-stone-900/95 p-6 sm:p-8 rounded-xl temple-border text-center space-y-6 max-w-md mx-auto backdrop-blur-md">
         <h2 class="text-xl sm:text-2xl font-bold text-amber-400 font-cinzel">
-          🕹️ ¡SALÓN DE LA FAMA! 🕹️
+          🕹️ ¡SALÓN DE LA FAMA GLOBAL! 🕹️
         </h2>
         <p class="text-amber-200 text-xs sm:text-sm">
           Has escapado del templo. Introduce tus iniciales (exactamente 3 letras):
@@ -190,10 +194,10 @@
             <div id="summary-details" class="space-y-3"></div>
           </div>
 
-          <!-- Columna Derecha: Ranking Separado por Dificultad -->
+          <!-- Columna Derecha: Ranking Global Separado por Dificultad -->
           <div class="lg:col-span-7 bg-stone-900/95 p-4 sm:p-6 rounded-xl temple-border space-y-4 max-h-[550px] overflow-y-auto flex flex-col">
             <h3 class="text-lg sm:text-xl font-bold text-amber-400 font-cinzel border-b border-amber-800/50 pb-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-              <span>🏛️ Salón de la Fama</span>
+              <span>🏛️ Salón de la Fama Global</span>
               <span id="player-rank-badge" class="text-xs bg-amber-800 text-amber-200 px-2 py-1 rounded">Puesto: #--</span>
             </h3>
             
@@ -216,6 +220,7 @@
                   </tr>
                 </thead>
                 <tbody id="ranking-table-body" class="divide-y divide-amber-900/30 font-arcade text-base">
+                  <tr><td colspan="5" class="p-4 text-center text-amber-400/70">Cargando ranking global...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -237,6 +242,28 @@
   </footer>
 
   <script>
+    // --- CONFIGURACIÓN DE FIREBASE (RANKING GLOBAL) ---
+    // (Asegúrate de mantener tus claves reales configuradas aquí)
+     const firebaseConfig = {
+       apiKey: "AIzaSyBh_ypWRht1f6HhgQyopquaH3cJXJ5WUcA",
+       authDomain: "escapetemploalgebraico.firebaseapp.com",
+       projectId: "escapetemploalgebraico",
+       storageBucket: "escapetemploalgebraico.firebasestorage.app",
+       messagingSenderId: "157937054955",
+       appId: "1:157937054955:web:cfb116270d7bf3943a3aae",
+       measurementId: "G-9KQJLKN3YY"
+      };
+
+    let db = null;
+    try {
+      if (firebaseConfig.apiKey !== "TU_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+      }
+    } catch (e) {
+      console.warn("Firebase no inicializado. Usando almacenamiento local de respaldo.", e);
+    }
+
     // --- ESTADO Y VARIABLES DEL JUEGO ---
     let targetCorrects = 5; 
     let currentCorrects = 0; 
@@ -408,7 +435,7 @@
       }, 1000);
     }
 
-    // --- FLUJO DEL JUEGO (Con protector de errores) ---
+    // --- FLUJO DEL JUEGO ---
     function startGame() {
       try {
         targetCorrects = parseInt(document.getElementById('num-rooms').value) || 5;
@@ -557,16 +584,8 @@
       }
     }
 
-    // --- RANKING ARCADE Y RESUMEN ---
-    function getStoredRanking() {
-      let stored = localStorage.getItem('templo_algebra_ranking');
-      if (stored) {
-        try { return JSON.parse(stored); } catch(e) { }
-      }
-      return [];
-    }
-
-    function submitArcadeName() {
+    // --- RANKING ARCADE GLOBAL Y LOCAL ASÍNCRONO ---
+    async function submitArcadeName() {
       let l1 = document.getElementById('arcade-input-1').value.trim().toLowerCase();
       let l2 = document.getElementById('arcade-input-2').value.trim().toLowerCase();
       let l3 = document.getElementById('arcade-input-3').value.trim().toLowerCase();
@@ -594,39 +613,10 @@
         ratioValue: targetCorrects / totalPlayed,
         timeSeconds: totalTimeSeconds,
         difficulty: difficulty, 
-        rooms: targetCorrects,   
+        rooms: targetCorrects,
+        timestamp: Date.now(),
         roomsData: [...roomsData]
       };
-
-      saveAndShowResults();
-    }
-
-    function switchRankingDiff(diff) {
-      currentRankingDiff = diff;
-      ['easy', 'medium', 'hard'].forEach(d => {
-        let btn = document.getElementById(`tab-${d}`);
-        if (d === diff) {
-          btn.className = "px-3 py-1 text-xs font-bold rounded bg-amber-500 text-black font-black transition-all";
-        } else {
-          btn.className = "px-3 py-1 text-xs font-bold rounded bg-stone-800 text-amber-300 hover:bg-stone-700 transition-all";
-        }
-      });
-      renderRankingTable();
-    }
-
-    function saveAndShowResults() {
-      let ranking = getStoredRanking();
-      ranking.push(currentPlayerResult);
-
-      ranking.sort((a, b) => {
-        if (b.ratioValue !== a.ratioValue) {
-          return b.ratioValue - a.ratioValue;
-        }
-        return a.timeSeconds - b.timeSeconds;
-      });
-
-      ranking = ranking.slice(0, 100); 
-      localStorage.setItem('templo_algebra_ranking', JSON.stringify(ranking));
 
       document.getElementById('screen-arcade').classList.add('hidden');
       document.getElementById('screen-summary').classList.remove('hidden');
@@ -665,16 +655,83 @@
         detailsContainer.appendChild(card);
       });
 
+      await saveAndLoadGlobalRanking();
+    }
+
+    async function saveAndLoadGlobalRanking() {
+      let tableBody = document.getElementById('ranking-table-body');
+      tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-amber-400/70">Sincronizando ranking global...</td></tr>`;
+
+      let ranking = [];
+
+      if (db) {
+        try {
+          await db.collection('global_ranking').add(currentPlayerResult);
+
+          let snapshot = await db.collection('global_ranking')
+            .orderBy('ratioValue', 'desc')
+            .orderBy('timeSeconds', 'asc')
+            .limit(200)
+            .get();
+
+          snapshot.forEach(doc => {
+            ranking.push(doc.data());
+          });
+        } catch (err) {
+          console.error("Error al sincronizar con Firebase:", err);
+          ranking = getFallbackLocalRanking();
+        }
+      } else {
+        ranking = getFallbackLocalRanking();
+      }
+
+      localStorage.setItem('templo_algebra_global_ranking', JSON.stringify(ranking));
       switchRankingDiff(currentPlayerResult.difficulty);
     }
 
-    function renderRankingTable() {
-      let ranking = getStoredRanking();
+    function getFallbackLocalRanking() {
+      let stored = localStorage.getItem('templo_algebra_global_ranking');
+      let ranking = stored ? JSON.parse(stored) : [];
+      if (!ranking.some(item => item.nameTag === currentPlayerResult.nameTag && item.timestamp === currentPlayerResult.timestamp)) {
+        ranking.push(currentPlayerResult);
+      }
+      ranking.sort((a, b) => {
+        if (b.ratioValue !== a.ratioValue) return b.ratioValue - a.ratioValue;
+        return a.timeSeconds - b.timeSeconds;
+      });
+      return ranking;
+    }
+
+    function switchRankingDiff(diff) {
+      currentRankingDiff = diff;
+      ['easy', 'medium', 'hard'].forEach(d => {
+        let btn = document.getElementById(`tab-${d}`);
+        if (d === diff) {
+          btn.className = "px-3 py-1 text-xs font-bold rounded bg-amber-500 text-black font-black transition-all";
+        } else {
+          btn.className = "px-3 py-1 text-xs font-bold rounded bg-stone-800 text-amber-300 hover:bg-stone-700 transition-all";
+        }
+      });
+      
+      let stored = localStorage.getItem('templo_algebra_global_ranking');
+      let ranking = stored ? JSON.parse(stored) : [];
+      renderRankingTable(ranking);
+    }
+
+    function renderRankingTable(rankingSource) {
+      let ranking = rankingSource || [];
       
       let filteredRanking = ranking.filter(item => (item.difficulty || 'medium') === currentRankingDiff);
       filteredRanking = filteredRanking.slice(0, 20); 
 
-      let playerRank = filteredRanking.findIndex(item => item === currentPlayerResult) + 1;
+      let playerRank = -1;
+      if (currentPlayerResult) {
+        playerRank = filteredRanking.findIndex(item => 
+          item.nameTag === currentPlayerResult.nameTag && 
+          item.timestamp === currentPlayerResult.timestamp
+        ) + 1;
+      }
+
       let rankBadge = document.getElementById('player-rank-badge');
       if (playerRank > 0) {
         rankBadge.textContent = `Puesto (${currentRankingDiff.toUpperCase()}): #${playerRank}`;
@@ -691,7 +748,10 @@
       }
 
       filteredRanking.forEach((entry, idx) => {
-        let isCurrentPlayer = entry === currentPlayerResult;
+        let isCurrentPlayer = currentPlayerResult && (
+          entry.nameTag === currentPlayerResult.nameTag && 
+          entry.timestamp === currentPlayerResult.timestamp
+        );
         let row = document.createElement('tr');
         row.className = isCurrentPlayer ? 'bg-amber-600/30 text-amber-200 font-bold border-b border-amber-600/50' : 'hover:bg-stone-800/50 border-b border-amber-900/20';
 
