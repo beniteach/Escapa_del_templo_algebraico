@@ -666,14 +666,11 @@
 
       if (db) {
         try {
+          // 1. Guardamos la nueva partida en la nube de Firebase
           await db.collection('global_ranking').add(currentPlayerResult);
 
-          let snapshot = await db.collection('global_ranking')
-            .orderBy('ratioValue', 'desc')
-            .orderBy('timeSeconds', 'asc')
-            .limit(200)
-            .get();
-
+          // 2. Traemos todos los documentos de la colección sin restricciones de índice
+          let snapshot = await db.collection('global_ranking').get();
           snapshot.forEach(doc => {
             ranking.push(doc.data());
           });
@@ -683,6 +680,32 @@
         }
       } else {
         ranking = getFallbackLocalRanking();
+      }
+
+      // 3. Ordenamos en JavaScript por mejor ratio y menor tiempo
+      ranking.sort((a, b) => {
+        if (b.ratioValue !== a.ratioValue) return b.ratioValue - a.ratioValue;
+        return a.timeSeconds - b.timeSeconds;
+      });
+
+      // Guardamos la lista sincronizada en local como respaldo
+      localStorage.setItem('templo_algebra_global_ranking', JSON.stringify(ranking));
+      switchRankingDiff(currentPlayerResult.difficulty);
+    }
+
+    function getFallbackLocalRanking() {
+      let stored = localStorage.getItem('templo_algebra_global_ranking');
+      let ranking = stored ? JSON.parse(stored) : [];
+      if (currentPlayerResult && !ranking.some(item => item.nameTag === currentPlayerResult.nameTag && item.timestamp === currentPlayerResult.timestamp)) {
+        ranking.push(currentPlayerResult);
+      }
+      ranking.sort((a, b) => {
+        if (b.ratioValue !== a.ratioValue) return b.ratioValue - a.ratioValue;
+        return a.timeSeconds - b.timeSeconds;
+      });
+      return ranking;
+    }
+    
       }
 
       localStorage.setItem('templo_algebra_global_ranking', JSON.stringify(ranking));
